@@ -1,20 +1,13 @@
 use std::thread;
-use std::sync::{mpsc::channel, mpsc::Sender};
-
-use actix_web::{post, web, App, HttpServer, HttpResponse};
+use std::sync::mpsc::channel;
 
 mod types;
+mod server;
+
 use types::{Book, OrderType, Transaction};
+use server::start_server;
 
-
-#[post("/")]
-pub async fn create(transaction: web::Json<Transaction>, data: web::Data<Sender<Transaction>>) -> HttpResponse {
-    data.clone().send(transaction.into_inner()).unwrap();
-    HttpResponse::Ok().json("success")
-}
-
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
+fn main(){
     // The channel for communicating new transactions
     let (tx, rx) = channel::<Transaction>();
 
@@ -34,15 +27,13 @@ async fn main() -> std::io::Result<()> {
         }
     });
 
-    // Start api server
-    HttpServer::new(move|| {
-        let data = web::Data::new(tx.clone());
-        
-        App::new()
-            .app_data(data)
-            .service(create)
-        })
-    .bind("127.0.0.1:8080")?
-    .run()
-    .await
+    // This thread will run the server
+    let handle = thread::spawn(move || {
+        match start_server(tx.clone()) {
+            Err(e) => println!("An error occured: {:?}", e),
+            _ => (),
+        };
+    });
+
+    handle.join().unwrap();
 }
