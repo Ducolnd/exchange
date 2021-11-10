@@ -1,18 +1,48 @@
+use std::thread;
+use std::sync::{mpsc::channel, mpsc::Sender};
+
+use actix_web::{post, web, App, HttpServer, HttpResponse};
+
 mod types;
+use types::{Book, OrderType, Transaction};
 
-use types::{Book, OrderType};
 
-fn main() {
-    let mut book = Book::new();
-    book.new_order(OrderType::SELL, 9, 420);
-    book.new_order(OrderType::BUY, 32, 400);
+#[post("/")]
+pub async fn create(transaction: web::Json<Transaction>, data: web::Data<Sender<Transaction>>) -> HttpResponse {
+    data.clone().send(transaction.into_inner()).unwrap();
+    HttpResponse::Ok().json("success")
+}
 
-    book.new_order(OrderType::BUY, 46, 6);
-    book.new_order(OrderType::SELL, 45, 1);
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    // The channel for communicating new transactions
+    let (tx, rx) = channel::<Transaction>();
 
-    book.new_order(OrderType::SELL, 12, 4);
-    book.new_order(OrderType::BUY, 14, 23);
-    book.new_order(OrderType::BUY, 12, 5);
+    // The thread on which the exchange runs
+    thread::spawn(move|| {
+        let mut book = Book::new();
 
-    println!("{:?}", book.buy_book.clone().into_sorted_vec());
+
+        let iter = rx.iter();
+        for element in iter {
+            println!("New transaction came in: {:?}", element);
+
+            match element.sell {
+                true => book.new_order(OrderType::SELL, element.price, element.size),
+                false => book.new_order(OrderType::BUY, element.price, element.size),
+            };
+        }
+    });
+
+    // Start api server
+    HttpServer::new(move|| {
+        let data = web::Data::new(tx.clone());
+        
+        App::new()
+            .app_data(data)
+            .service(create)
+        })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }

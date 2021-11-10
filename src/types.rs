@@ -2,6 +2,8 @@ use std::{cmp::Ord, collections::BinaryHeap};
 use core::cmp::{Ordering};
 use std::time::SystemTime;
 
+use serde::{Serialize, Deserialize};
+
 #[derive(Clone)]
 pub struct Book {
     pub sell_book: BinaryHeap<SellOrder>,
@@ -45,7 +47,7 @@ impl Book {
         if let Some(highest_buy) = self.buy_book.peek() {
             if let Some(highest_sell) = self.sell_book.peek() {
                 
-                if highest_sell.price < highest_buy.price {
+                if highest_sell.price <= highest_buy.price {
                     let remainder = highest_sell.size - highest_buy.size;
                     if remainder == 0 {
                         println!("Matched {:?} against {:?}", highest_buy, highest_sell);
@@ -145,4 +147,12 @@ impl PartialEq for BuyOrder {
     fn eq(&self, _: &Self) -> bool {
         false
     }
+}
+
+// The raw json transaction
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Transaction {
+    pub size: i64,
+    pub price: u64,
+    pub sell: bool,
 }
