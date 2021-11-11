@@ -19,12 +19,16 @@
         <input type="number" id="size" value="5"><br><br>
 
         <label for="sellbuy">Sell or buy</label><br>
-        <input id="sell" type="radio" name="sellbuy">
+        <input checked id="sell" type="radio" name="sellbuy">
         <label for="sell">Sell</label><br>
         <input type="radio" name="sellbuy" value="0">
         <label for="buy">Buy</label><br><br>
 
         <input type="submit" value="Submit">
     </form>
+
+    <h3>Would you like to place orders using Websockets or HTTP?</h3>
+    <button style="color: blue" class="protocol" id="ws">Websockets</button>
+    <button class="protocol" id="http">HTTP</button>
 </body>
 </html>
