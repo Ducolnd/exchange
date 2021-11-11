@@ -3,6 +3,7 @@ use std::sync::mpsc::channel;
 
 mod types;
 mod server;
+mod websocket;
 
 use types::{Book, OrderType, Transaction};
 use server::start_server;
@@ -29,6 +30,7 @@ fn main(){
 
     // This thread will run the server
     let handle = thread::spawn(move || {
+        // Start the server, give it its own send channel for communicating transactions
         match start_server(tx.clone()) {
             Err(e) => println!("An error occured: {:?}", e),
             _ => (),

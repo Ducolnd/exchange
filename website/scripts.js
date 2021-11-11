@@ -21,3 +21,25 @@ $(document).ready(function() {
         });
     })
 })
+
+function connect() {
+    var url = "ws://127.0.0.1:8080/ws/"
+
+    conn = new WebSocket(url);
+    console.log("Connecting...");
+
+    conn.onopen = function() {
+        console.log("Connected");
+
+        setTimeout(function() {
+            conn.send(JSON.stringify({size: 34, price: 3, sell: false}))
+        }, 1000)
+    }
+    conn.onmessage = function(e) {
+        console.info("Received a message ", e.data);
+    }
+    conn.onclose = function() {
+        console.warn("Disconnected from server")
+        conn = null;
+    }
+}
