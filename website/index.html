@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple exchange</title>
+
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="./scripts.js"></script>
+</head>
+<body>
+    <h3>Place a limit order</h3>
+    <form id="transaction">
+        <label for="price">Price</label><br>
+        <input type="number" id="price" value="100"><br><br>
+        <label for="size">Number of ADA</label><br>
+        <input type="number" id="size" value="5"><br><br>
+
+        <label for="sellbuy">Sell or buy</label><br>
+        <input id="sell" type="radio" name="sellbuy">
+        <label for="sell">Sell</label><br>
+        <input type="radio" name="sellbuy" value="0">
+        <label for="buy">Buy</label><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
