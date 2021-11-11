@@ -1,11 +1,12 @@
-use std::sync::mpsc::Sender;
 use std::time::Instant;
+use std::sync::{Arc, RwLock};
 
 use actix_web::{App, Error, HttpRequest, HttpResponse, HttpServer, Responder, get, post, web};
 use actix_cors::Cors;
 use actix_web_actors::ws;
+use crossbeam_channel::{unbounded, Sender, Receiver};
 
-use crate::types::Transaction;
+use crate::types::{Transaction, BuyOrder, SellOrder, Book};
 use crate::websocket::{WsConnection};
 
 
@@ -27,12 +28,14 @@ async fn ws_route(
     req: HttpRequest,
     stream: web::Payload,
     channel: web::Data<Sender<Transaction>>,
+    book: web::Data<Arc<RwLock<Book>>>,
 ) -> Result<HttpResponse, Error> {
     println!("Req: {:?}", &req);
     ws::start(
         WsConnection {
             hb: Instant::now(),
             tx: channel.get_ref().clone(),
+            book: book.get_ref().clone(),
         },
         &req,
         stream,
@@ -40,14 +43,17 @@ async fn ws_route(
 }
 
 #[actix_web::main]
-pub async fn start_server(tx: Sender<Transaction>) -> std::io::Result<()> {
+pub async fn start_server(tx: Sender<Transaction>, book: Arc<RwLock<Book>>) -> std::io::Result<()> {
 
     std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
     env_logger::init();
 
     // Start api server
     HttpServer::new(move|| {
-        let data = web::Data::new(tx.clone());
+        let transactor = web::Data::new(tx.clone());
+        let dataReceive = web::Data::new(book.clone());
+
+
         let cors = Cors::default()
             .allow_any_origin()
             .allow_any_header()
@@ -55,7 +61,8 @@ pub async fn start_server(tx: Sender<Transaction>) -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
-            .app_data(data)
+            .app_data(transactor)
+            .app_data(dataReceive)
             .service(create)
             .service(test)
             .service(ws_route)

@@ -8,7 +8,7 @@ $(document).ready(function() {
         let data = {
             size: parseInt(parseFloat($("#size").val())),
             price: parseInt(parseFloat($("#price").val())),
-            sell: $("#sell:checked").val() === "on" ? true : false,
+            sell: $("#sell:checked").val() === "on" ? false : true,
         }      
         data = JSON.stringify(data);
         e.preventDefault();
@@ -56,11 +56,31 @@ function connect() {
         console.log("Connected");
     }
     conn.onmessage = function(e) {
-        console.info("Received a message ", e.data);
+        // console.info("Received a message ");
+        let data = JSON.parse(e.data);
+
+        let buys = JSON.parse(data[0]);
+        let sells = JSON.parse(data[1]);
+        // console.log(sells, buys);
+        updateUI(buys, sells);
     }
     conn.onclose = function() {
         console.warn("Disconnected from server")
         conn = null;
+    }
+}
+
+function updateUI(sells, buys) {
+    $("#buys").empty();
+    for (let buy of buys.reverse()) {
+        let element = $(`<li style="background-color: lightgreen;" class='list-group-item'>$${buy.price} --- size: ${buy.size}</li>`);
+        $("#buys").append(element);
+    }
+    
+    $("#sells").empty();
+    for (let sell of sells) {
+        let element = $(`<li style="background-color: #ffcccb;" class='list-group-item'>$${sell.price} --- size: ${sell.size}</li>`);
+        $("#sells").append(element);
     }
 }
 

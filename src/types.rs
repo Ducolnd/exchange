@@ -10,6 +10,7 @@ pub struct Book {
     pub buy_book: BinaryHeap<BuyOrder>,
 }
 
+/// Orderbook, matches orders and handles incoming transactions
 impl Book {
     pub fn new() -> Self {
         Self {
@@ -79,7 +80,7 @@ pub enum OrderType {
 
 // Sell Order
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct SellOrder {
     pub size: i64,
     pub price: u64,
@@ -115,7 +116,7 @@ impl PartialEq for SellOrder {
 
 // Buy Order
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct BuyOrder {
     pub size: i64,
     pub price: u64,

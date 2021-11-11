@@ -1,22 +1,24 @@
-use std::sync::mpsc::Sender;
 use std::time::{Duration, Instant};
+use std::sync::{Arc, RwLock};
+
+use crossbeam_channel::{Receiver, Sender};
 
 use actix::prelude::*;
 use actix_web_actors::ws;
 
-use crate::types::Transaction;
+use crate::types::{Transaction, BuyOrder, SellOrder, Book};
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
+const CLIENT_UPDATE_INTERVAL: Duration = Duration::from_millis(1000);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 
-/// websocket connection is long running connection, it easier
-/// to handle with an actor
 pub struct WsConnection {
     /// Client must send ping at least once per 10 seconds (CLIENT_TIMEOUT),
     /// otherwise we drop connection.
     pub hb: Instant,
     pub tx: Sender<Transaction>,
+    pub book: Arc<RwLock<Book>>,
 }
 
 impl Actor for WsConnection {
@@ -25,6 +27,7 @@ impl Actor for WsConnection {
     /// Method is called on actor start. We start the heartbeat process here.
     fn started(&mut self, ctx: &mut Self::Context) {
         self.hb(ctx);
+        self.update_client(ctx);
     }
 }
 
@@ -38,7 +41,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConnection {
         println!("WS: {:?}", msg);
         match msg {
             Ok(ws::Message::Text(text)) => {
+                // Parse json
                 let transaction: Transaction = serde_json::from_str(&text).unwrap();
+
+                // Send transaction to Book thread
                 self.tx.send(transaction).unwrap();
                 // println!("Received transaction: {:?}", transaction);
             },
@@ -73,6 +79,25 @@ impl WsConnection {
 
                 // don't try to send a ping
                 return;
+            }
+
+            ctx.ping(b"");
+        });
+    }
+
+    fn update_client(&self, ctx: &mut <Self as Actor>::Context) {       
+        ctx.run_interval(CLIENT_UPDATE_INTERVAL, |act, ctx| {
+            
+            if let Ok(read) = act.book.read() {
+                let vec = read.get_vec();
+
+                let a = serde_json::to_string(&vec.0).unwrap();
+                let b = serde_json::to_string(&vec.1).unwrap();
+
+                let data = format!("[{:?},{:?}]", a, b);
+
+                println!("Read value: {:?}", data);
+                ctx.text(data);
             }
 
             ctx.ping(b"");
