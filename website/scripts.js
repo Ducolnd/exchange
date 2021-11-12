@@ -1,20 +1,19 @@
 let protocol = "ws";
 let conn = null;
+let action = "sell";
 
 $(document).ready(function() {
     connect();
 
-    $("#transaction").submit(function(e) {
+    $("#submit_form").click(function() {
         let data = {
             size: parseInt(parseFloat($("#size").val())),
             price: parseInt(parseFloat($("#price").val())),
-            sell: $("#sell:checked").val() === "on" ? false : true,
+            sell: action === "sell" ? true : false,
         }      
         data = JSON.stringify(data);
-        e.preventDefault();
 
         if (protocol == "http") {
-    
             $.ajax({
                 url: 'http://127.0.0.1:8080/',
                 type: 'post',
@@ -28,6 +27,20 @@ $(document).ready(function() {
         } else {
             conn.send(data);
         }
+    });
+
+    $("#select_sell").click(function() {
+        $(this).attr("class", "btn btn-danger");
+        $("#select_buy").attr("class", "btn btn-outline-success");
+
+        action = "sell";
+    })
+
+    $("#select_buy").click(function() {
+        $(this).attr("class", "btn btn-success");
+        $("#select_sell").attr("class", "btn btn-outline-danger");
+
+        action = "buy";
     })
 
     $("#ws").click(function() {
@@ -62,7 +75,7 @@ function connect() {
         let buys = JSON.parse(data[0]);
         let sells = JSON.parse(data[1]);
         // console.log(sells, buys);
-        updateUI(buys, sells);
+        updateUI(sells, buys);
     }
     conn.onclose = function() {
         console.warn("Disconnected from server")
@@ -71,16 +84,24 @@ function connect() {
 }
 
 function updateUI(sells, buys) {
-    $("#buys").empty();
+    $("#buy-orders").empty();
     for (let buy of buys.reverse()) {
-        let element = $(`<li style="background-color: lightgreen;" class='list-group-item'>$${buy.price} --- size: ${buy.size}</li>`);
-        $("#buys").append(element);
+        let element = $(`<div class="row">
+                            <div class="col"><p>${buy.size}</p></div>
+                            <div class="col"><p>${buy.price}</p></div>
+                        </div>`);
+
+        $("#buy-orders").append(element);
     }
     
-    $("#sells").empty();
+    $("#sub-sell-orders").empty();
     for (let sell of sells) {
-        let element = $(`<li style="background-color: #ffcccb;" class='list-group-item'>$${sell.price} --- size: ${sell.size}</li>`);
-        $("#sells").append(element);
+        let element = $(`<div class="row">
+                            <div class="col"><p>${sell.size}</p></div>
+                            <div class="col"><p>${sell.price}</p></div>
+                        </div>`);
+
+        $("#sub-sell-orders").append(element);
     }
 }
 

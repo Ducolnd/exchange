@@ -13,34 +13,78 @@
     <script src="./scripts.js"></script>
 </head>
 <body>
-    <h3>Place a limit order</h3>
-    <form id="transaction">
-        <label for="price">Price</label><br>
-        <input type="number" id="price" value="100"><br><br>
-        <label for="size">Number of ADA</label><br>
-        <input type="number" id="size" value="5"><br><br>
+    <div class="container">
+        <h1 id="headingPlace" class="text-center">Place a limit order</h3>
 
-        <label for="sellbuy">Sell or buy</label><br>
-        <input checked id="sell" type="radio" name="sellbuy">
-        <label for="sell">Sell</label><br>
-        <input type="radio" name="sellbuy" value="0">
-        <label for="buy">Buy</label><br><br>
+        <div class="row no-gutters">
 
-        <input type="submit" value="Submit">
-    </form>
+            <div id="book" class="col-3">
 
-    <h3>Would you like to place orders using Websockets or HTTP?</h3>
-    <button style="color: blue" class="protocol" id="ws">Websockets</button>
-    <button class="protocol" id="http">HTTP</button>
+                <div id="top-bar">
+                    <div id="sell-row" class="row">
+                        <div class="col"><p>Market Size</p></div>
+                        <div class="col"><p>Price (EUR)</p></div>
+                    </div>
+                </div>
 
-    <div id="incoming">
-        <ul style="background-color: lightgreen;" id="sells" class="list-group">
+                <div id="sell-orders">
+                    <div id="sub-sell-orders">
+                        
+                    </div>
+                </div>
 
-        </ul>
-        <ul style="background-color: #ffcccb;" id="buys" class="list-group">
+                <div class="align-middle" id="middle-section">
+                    <div class="row">
+                        <div class="col">
+                            <p class="text-center">EUR spread</p>
+                        </div>
+                        <div class="col">
+                            <p class="text-center"><b>0.008</b></p>
+                        </div>
+                    </div>
+                </div>
 
-        </ul>
+                <div id="buy-orders">
+
+                </div>
+            </div>
+
+            <div class="col-6">
+                <form onSubmit="return false;" id="transaction">
+                    <div class="form-group row no-gutters">
+                        <div class="col">
+                            <small class="form-text text-muted" for="price">Price</small>
+                            <input class="form-control form-control-sm" type="number" id="price" value="100">
+                        </div>
+                        <div class="col">
+                            <small class="form-text text-muted" for="price">Amount</small>
+                            <input class="form-control form-control-sm" type="number" id="size" value="5">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div role="group" class="btn-group btn-group-lg">
+                            <button id="select_sell" class="btn btn-danger">Sell</button>
+                            <button id="select_buy" class="btn btn-outline-success">Buy</button>
+                        </div>
+                    </div>
+            
+            
+                    <button id="submit_form" class="btn btn-primary">Submit</button>
+                </form>
+            
+                <h3>Would you like to place orders using Websockets or HTTP?</h3>
+                <button style="color: blue" class="protocol btn btn-light" id="ws">Websockets</button>
+                <button class="protocol btn btn-light" id="http">HTTP</button>
+            </div>
+
+            <div class="col-3">
+                <h1>hey</h1>
+            </div>
+
+        </div>
     </div>
+    
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

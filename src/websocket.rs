@@ -38,7 +38,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConnection {
         ctx: &mut Self::Context,
     ) {
         // process websocket messages
-        println!("WS: {:?}", msg);
         match msg {
             Ok(ws::Message::Text(text)) => {
                 // Parse json
@@ -46,7 +45,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConnection {
 
                 // Send transaction to Book thread
                 self.tx.send(transaction).unwrap();
-                // println!("Received transaction: {:?}", transaction);
+                println!("WS: {:?}", text);
             },
             Ok(ws::Message::Ping(msg)) => {
                 self.hb = Instant::now();
@@ -91,12 +90,11 @@ impl WsConnection {
             if let Ok(read) = act.book.read() {
                 let vec = read.get_vec();
 
-                let a = serde_json::to_string(&vec.0).unwrap();
-                let b = serde_json::to_string(&vec.1).unwrap();
+                let buy = serde_json::to_string(&vec.0).unwrap();
+                let sell = serde_json::to_string(&vec.1).unwrap();
 
-                let data = format!("[{:?},{:?}]", a, b);
+                let data = format!("[{:?},{:?}]", buy, sell);
 
-                println!("Read value: {:?}", data);
                 ctx.text(data);
             }
 

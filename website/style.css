@@ -1,0 +1,36 @@
+#headingPlace {
+    border-bottom: 1px solid black;
+}
+
+/* Order book styling */
+#book {
+    min-height: 800px;
+    /* height: 1000px; */
+}
+
+#sell-orders {
+    height: 50%;
+    /* border: 1px solid black; */
+    position: relative;
+}
+
+#sub-sell-orders {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+}
+
+#buy-orders {
+    /* border: 1px solid black; */
+    overflow: scroll;
+    height: 50%;
+}
+
+#sub-sell-orders::-webkit-scrollbar, #buy-orders::-webkit-scrollbar {
+    display: none;
+}
+
+.col p {
+    text-align: center;
+    margin: 0;
+}
