@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use std::sync::{Arc, RwLock};
 
-use crossbeam_channel::{Receiver, Sender};
+use crossbeam_channel::Sender;
 use serde_json::json;
 
 use actix::prelude::*;
@@ -32,8 +32,16 @@ impl Actor for WsConnection {
         self.hb(ctx);
         self.update_client(ctx);
 
-        // ToDo: send entire book on first connection
-        
+        if let Ok(read) = self.book.read() {
+            let item = json!({
+                "buy": {"add": read.buffered_state.0},
+                "sell": {"add": read.buffered_state.1},
+            });
+
+            ctx.text(serde_json::to_string(&item).unwrap());
+
+            self.buffered_state = read.buffered_state.clone();
+        }
     }
 }
 
@@ -121,7 +129,6 @@ impl WsConnection {
 
                     act.buffered_state = read.buffered_state.clone();
                 }
-
             }
         });
     }
@@ -154,141 +161,5 @@ impl WsConnection {
         }
 
         (hash, hash2)
-    }
-
-    /// Compares old order book data with new
-    /// and returns a HashMap with the indexes
-    /// of old data to be refreshed
-    fn compare_things(
-        old: &(Vec<BuyOrder>, Vec<SellOrder>),
-        new: &(Vec<BuyOrder>, Vec<SellOrder>),
-
-    ) -> (Option<HashMap<usize, BuyOrder>>, Option<HashMap<usize, SellOrder>>){
-        let mut changed_buys: Option<HashMap<_,_>> = None;
-        let mut changed_sells: Option<HashMap<_,_>> = None;
-        
-        // Buy
-        let newb = &new.0;
-        let oldb = &old.0;
-
-        let newlen = newb.len();
-        let oldlen = oldb.len();
-        
-        let mut frombuy: i16 = -1; // -1 = nothing new found
-        let stop = oldlen.min(newlen);
-
-        for i in 0..stop {
-            if !(oldb[i] == newb[i]) {
-                println!("Checking for {:?} and {:?}", oldb[i], newb[i]);
-                frombuy = i as i16;
-                break;
-            }
-        }
-
-        if newlen > oldlen {
-            if frombuy == -1 {
-                changed_buys = Some((oldlen..newlen).zip(newb[oldlen..newlen].to_vec().into_iter()).collect());
-            } 
-            else {
-                changed_buys = Some((frombuy as usize..newlen).zip(newb[frombuy as usize..newlen].to_vec().into_iter()).collect());
-            }
-        }
-        
-        else if newlen == oldlen {
-            if frombuy == -1 {
-                changed_buys = None; // Nothing's changed
-            } else {
-                changed_buys = Some((frombuy as usize..newlen).zip(newb[frombuy as usize..newlen].to_vec().into_iter()).collect());
-            }
-        }
-        
-        else {
-            if frombuy == -1 {
-                let mut a= HashMap::new();
-                
-                for i in newlen..oldlen {
-                    a.insert(i, BuyOrder {price: 0, size: 0, timestamp: 0});
-                }
-
-                changed_buys = Some(a);
-
-            } else {
-                let mut a = (frombuy as usize..newlen).zip(newb[frombuy as usize..newlen].to_vec().into_iter()).collect::<HashMap<usize, BuyOrder>>();
-
-                for i in newlen..oldlen {
-                    a.insert(i, BuyOrder {price: 0, size: 0, timestamp: 0}).unwrap();
-                }
-
-                changed_buys = Some(a);
-            }
-        }
-       
-
-        // Sell
-        let mut news = new.1.clone();
-        let mut olds = old.1.clone();
-
-        news.sort();
-        olds.sort();
-
-        println!("news {:?} olds {:?}", news, olds);
-
-        let newlen = news.len();
-        let oldlen = olds.len();
-        
-        let mut frombuy: i16 = -1; // -1 = nothing new found
-        let stop = oldlen.min(newlen);
-
-        for i in 0..stop {
-            if !(news[i] == olds[i]) {
-                println!("Checking for {:?} and {:?}", olds[i], news[i]);
-                frombuy = i as i16;
-                break;
-            }
-        }
-
-        if newlen > oldlen {
-            if frombuy == -1 {
-                changed_sells = Some((oldlen..newlen).zip(news[oldlen..newlen].to_vec().into_iter()).collect());
-                println!("ofund nothing sending all");
-            } 
-            else {
-                changed_sells = Some((frombuy as usize..newlen).zip(news[frombuy as usize..newlen].to_vec().into_iter()).collect());
-                println!("Founding something sending a part")
-            }
-        }
-        
-        else if newlen == oldlen {
-            if frombuy == -1 {
-                changed_sells = None; // Nothing's changed
-            } else {
-                changed_sells = Some((frombuy as usize..newlen).zip(news[frombuy as usize..newlen].to_vec().into_iter()).collect());
-            }
-        }
-        
-        else {
-            if frombuy == -1 {
-                let mut a= HashMap::new();
-                
-                for i in newlen..oldlen {
-                    a.insert(i, SellOrder {price: 0, size: 0, timestamp: 0});
-                }
-
-                changed_sells = Some(a);
-            } else {
-                let mut a = (frombuy as usize..newlen).zip(news[frombuy as usize..newlen].to_vec().into_iter()).collect::<HashMap<usize, SellOrder>>();
-
-                println!("Found new things and need to remove stuff from {}", frombuy);
-
-
-                for i in newlen..oldlen {
-                    a.insert(i, SellOrder {price: 0, size: 0, timestamp: 0});
-                }
-
-                changed_sells = Some(a);
-            }
-        }
-
-        (changed_buys, changed_sells)
     }
 }
