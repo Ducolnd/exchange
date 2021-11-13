@@ -3,6 +3,7 @@
 }
 
 /* Order book styling */
+
 #book {
     min-height: 800px;
     /* height: 1000px; */
@@ -24,6 +25,31 @@
     /* border: 1px solid black; */
     overflow: scroll;
     height: 50%;
+}
+
+#sell-orders .price-col p {
+    color: red;
+}
+
+#buy-orders .price-col p {
+    color: #47d600;
+}
+
+#buy-orders .row, #sell-orders .row {
+    animation: fadebackground 1s;
+}
+/* body {
+    background: #FCE97F;
+    animation: fadebackground 6s;
+} */
+
+@keyframes fadebackground {
+    from {
+        background-color: black;
+    }
+    to {
+        background-color: white;
+    }
 }
 
 #sub-sell-orders::-webkit-scrollbar, #buy-orders::-webkit-scrollbar {

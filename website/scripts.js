@@ -114,6 +114,9 @@ class Order extends React.Component {
 }
 
 setInterval(function () {
+    sells.sort(compareSellOrder);
+    buys.sort(compareSellOrder);
+
     // Sells
     const sellOrders = sells.map((order) =>
         <Order key={order.timestamp.toString()} value={order} />
@@ -137,7 +140,7 @@ setInterval(function () {
         document.getElementById('outer-buy-orders')
     );
 
-}, 1000);
+}, 100);
 
 function updateBook(newSells, newBuys) {
     // Sells
