@@ -11,7 +11,7 @@ use actix_web_actors::ws;
 use crate::types::{Transaction, BuyOrder, SellOrder, Book};
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
-const CLIENT_UPDATE_INTERVAL: Duration = Duration::from_millis(1000);
+const CLIENT_UPDATE_INTERVAL: Duration = Duration::from_millis(500);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 
@@ -115,25 +115,24 @@ impl WsConnection {
         ctx.run_interval(CLIENT_UPDATE_INTERVAL, |act, ctx| {
             
             if let Ok(read) = act.book.read() {
-                let reset = WsConnection::compare_things2(&act.buffered_state, &read.buffered_state);
+                let reset = WsConnection::compare_old_new(&act.buffered_state, &read.buffered_state);
 
                 if !(reset.0.is_empty() && reset.1.is_empty()) {
                     let item = json!({
                         "buy": reset.0,
                         "sell": reset.1,
                     });
-
-                    println!("Reset: {:?}", reset);
     
                     ctx.text(serde_json::to_string(&item).unwrap());
 
-                    act.buffered_state = read.buffered_state.clone();
+                    act.buffered_state = read.buffered_state.clone(); // Update
                 }
             }
         });
     }
 
-    fn compare_things2(
+    /// What has changed?
+    fn compare_old_new(
         old: &(Vec<BuyOrder>, Vec<SellOrder>),
         new: &(Vec<BuyOrder>, Vec<SellOrder>),
 

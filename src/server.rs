@@ -4,9 +4,9 @@ use std::sync::{Arc, RwLock};
 use actix_web::{App, Error, HttpRequest, HttpResponse, HttpServer, Responder, get, post, web};
 use actix_cors::Cors;
 use actix_web_actors::ws;
-use crossbeam_channel::{unbounded, Sender, Receiver};
+use crossbeam_channel::Sender;
 
-use crate::types::{Transaction, BuyOrder, SellOrder, Book};
+use crate::types::{Transaction, Book};
 use crate::websocket::{WsConnection};
 
 

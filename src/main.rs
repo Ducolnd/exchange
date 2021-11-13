@@ -8,7 +8,7 @@ mod types;
 mod server;
 mod websocket;
 
-use types::{Book, OrderType, Transaction, SellOrder, BuyOrder};
+use types::{Book, OrderType, Transaction};
 use server::start_server;
 
 fn main(){
