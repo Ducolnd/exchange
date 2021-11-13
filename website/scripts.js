@@ -1,16 +1,24 @@
+'use strict';
+
 let protocol = "ws";
 let conn = null;
 let action = "sell";
 
-$(document).ready(function() {
+let sells = [];
+let buys = [];
+
+let prevSells = {};
+let prevBuys = {};
+
+$(document).ready(function () {
     connect();
 
-    $("#submit_form").click(function() {
+    $("#submit_form").click(function () {
         let data = {
             size: parseInt(parseFloat($("#size").val())),
             price: parseInt(parseFloat($("#price").val())),
             sell: action === "sell" ? true : false,
-        }      
+        }
         data = JSON.stringify(data);
 
         if (protocol == "http") {
@@ -18,7 +26,7 @@ $(document).ready(function() {
                 url: 'http://127.0.0.1:8080/',
                 type: 'post',
                 data: data,
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 dataType: 'json',
                 success: function (data) {
                     console.info(data);
@@ -29,28 +37,28 @@ $(document).ready(function() {
         }
     });
 
-    $("#select_sell").click(function() {
+    $("#select_sell").click(function () {
         $(this).attr("class", "btn btn-danger");
         $("#select_buy").attr("class", "btn btn-outline-success");
 
         action = "sell";
     })
 
-    $("#select_buy").click(function() {
+    $("#select_buy").click(function () {
         $(this).attr("class", "btn btn-success");
         $("#select_sell").attr("class", "btn btn-outline-danger");
 
         action = "buy";
     })
 
-    $("#ws").click(function() {
+    $("#ws").click(function () {
         connect();
         $(this).css("color", "blue");
         $("#http").css("color", "black");
         protocol = "ws"
     })
 
-    $("#http").click(function() {
+    $("#http").click(function () {
         disconnect();
         $(this).css("color", "blue");
         $("#ws").css("color", "black");
@@ -65,43 +73,131 @@ function connect() {
     conn = new WebSocket(url);
     console.log("Connecting...");
 
-    conn.onopen = function() {
+    conn.onopen = function () {
         console.log("Connected");
     }
-    conn.onmessage = function(e) {
-        // console.info("Received a message ");
+    conn.onmessage = function (e) {
         let data = JSON.parse(e.data);
 
-        let buys = JSON.parse(data[0]);
-        let sells = JSON.parse(data[1]);
-        // console.log(sells, buys);
-        updateUI(sells, buys);
+        let newBuys = data["buy"];
+        let newSells = data["sell"];
+
+        console.log("newBuys", newBuys, "newSells", newSells);
+
+        updateBook(newSells, newBuys);
+
+        prevBuys = buys;
+        prevSells = sells;
     }
-    conn.onclose = function() {
+    conn.onclose = function () {
         console.warn("Disconnected from server")
         conn = null;
     }
 }
 
-function updateUI(sells, buys) {
-    $("#buy-orders").empty();
-    for (let buy of buys.reverse()) {
-        let element = $(`<div class="row">
-                            <div class="col"><p>${buy.size}</p></div>
-                            <div class="col"><p>${buy.price}</p></div>
-                        </div>`);
-
-        $("#buy-orders").append(element);
+class Order extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            order: props.value,
+        }
     }
-    
-    $("#sub-sell-orders").empty();
-    for (let sell of sells) {
-        let element = $(`<div class="row">
-                            <div class="col"><p>${sell.size}</p></div>
-                            <div class="col"><p>${sell.price}</p></div>
-                        </div>`);
 
-        $("#sub-sell-orders").append(element);
+    render() {
+        return (
+            <div className="row">
+                <div className="col"><p>{this.state.order.size}</p></div>
+                <div className="col price-col"><p>{this.state.order.price}</p></div>
+            </div>
+        );
+    }
+}
+
+setInterval(function () {
+    // Sells
+    const sellOrders = sells.map((order) =>
+        <Order key={order.timestamp.toString()} value={order} />
+    );
+    let toRender = <div id="sub-sell-orders">{sellOrders}</div>
+
+    ReactDOM.render(
+        toRender,
+        document.getElementById('sell-orders')
+    );
+
+
+    // Buys
+    const buyOrders = buys.map((order) =>
+        <Order key={order.timestamp.toString()} value={order} />
+    );
+    toRender = <div id="buy-orders">{buyOrders}</div>
+
+    ReactDOM.render(
+        toRender,
+        document.getElementById('outer-buy-orders')
+    );
+
+}, 1000);
+
+function updateBook(newSells, newBuys) {
+    // Sells
+    if (Object.keys(newSells).length > 0) {
+        if (Object.keys(sells).length > 0) {
+            if ("delete" in newSells) {
+
+                for (let i = 0; i < newSells["delete"].length; i++) {
+                    for (let x = 0; x < sells.length; x++) {
+                        if (newSells["delete"][i].timestamp === sells[x].timestamp) {
+                            sells.splice(x, 1);
+                        }
+                    }
+                }
+            }
+
+            if ("add" in newSells) {
+                sells = sells.concat(newSells["add"]);
+            }
+
+        } else {
+            newSells["add"].sort(compareSellOrder);
+            sells = newSells["add"];
+        }
+    }
+
+    // Buys
+    if (Object.keys(newBuys).length > 0) {
+        if (Object.keys(buys).length > 0) {
+            if ("delete" in newBuys) {
+                
+                for (let i = 0; i < newBuys["delete"].length; i++) {
+                    for (let x = 0; x < buys.length; x++) {
+                        if (newBuys["delete"][i].timestamp === buys[x].timestamp) {
+                            buys.splice(x, 1);
+                        }
+                    }
+                }
+            }
+
+            if ("add" in newBuys) {
+                buys = buys.concat(newBuys["add"]);
+            }
+
+        } else {
+            newBuys["add"].sort(compareSellOrder);
+            buys = newBuys["add"];
+            console.log("here")
+        }
+    }
+}
+
+function compareSellOrder(a, b) {
+    if (a.price < b.price) {
+        return 1;
+    }
+    else if (a.price > b.price) {
+        return -1;
+    } else {
+        return 0;
     }
 }
 

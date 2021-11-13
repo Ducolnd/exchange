@@ -1,4 +1,4 @@
-use std::{cmp::Ord, collections::BinaryHeap};
+use std::{cmp::Ord, collections::{BinaryHeap, HashMap}, time::{Instant, UNIX_EPOCH}};
 use core::cmp::{Ordering};
 use std::time::SystemTime;
 
@@ -8,6 +8,8 @@ use serde::{Serialize, Deserialize};
 pub struct Book {
     pub sell_book: BinaryHeap<SellOrder>,
     pub buy_book: BinaryHeap<BuyOrder>,
+
+    pub buffered_state: (Vec<BuyOrder>, Vec<SellOrder>),
 }
 
 /// Orderbook, matches orders and handles incoming transactions
@@ -16,6 +18,8 @@ impl Book {
         Self {
             sell_book: BinaryHeap::new(),
             buy_book: BinaryHeap::new(),
+
+            buffered_state: (vec![], vec![]),
         }
     }
 
@@ -25,14 +29,14 @@ impl Book {
                 self.buy_book.push(BuyOrder {
                     size,
                     price,
-                    timestamp: SystemTime::now().elapsed().unwrap().as_millis(),
+                    timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64,
                 });
             },
             OrderType::SELL => {
                 self.sell_book.push(SellOrder {
                     size,
                     price,
-                    timestamp: SystemTime::now().elapsed().unwrap().as_millis(),
+                    timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64,
                 });
             }
         }
@@ -40,8 +44,8 @@ impl Book {
         self.attempt_match();
     }
 
-    pub fn get_vec(&self) -> (Vec<BuyOrder>, Vec<SellOrder>) {
-        (self.buy_book.clone().into_sorted_vec(), self.sell_book.clone().into_sorted_vec())
+    pub fn update_state(&mut self){
+        self.buffered_state = (self.buy_book.clone().into_sorted_vec(), self.sell_book.clone().into_sorted_vec())
     }
 
     fn attempt_match(&mut self) {
@@ -80,11 +84,11 @@ pub enum OrderType {
 
 // Sell Order
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq, )]
 pub struct SellOrder {
     pub size: i64,
     pub price: u64,
-    pub timestamp: u128,
+    pub timestamp: u64,
 }
 
 impl Ord for SellOrder {
@@ -108,19 +112,13 @@ impl PartialOrd for SellOrder {
     }
 }
 
-impl PartialEq for SellOrder {
-    fn eq(&self, _: &Self) -> bool {
-        false
-    }
-}
-
 // Buy Order
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct BuyOrder {
     pub size: i64,
     pub price: u64,
-    pub timestamp: u128,
+    pub timestamp: u64,
 }
 
 impl Ord for BuyOrder {
@@ -141,12 +139,6 @@ impl Eq for BuyOrder {
 impl PartialOrd for BuyOrder {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for BuyOrder {
-    fn eq(&self, _: &Self) -> bool {
-        false
     }
 }
 

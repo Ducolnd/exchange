@@ -36,6 +36,7 @@ fn main(){
 
         let iter = rx_ransaction.iter();
 
+        let mut earlier = Instant::now();
         for element in iter {
             println!("New transaction came in: {:?}", element);
 
@@ -45,6 +46,12 @@ fn main(){
                     false => bookarc.new_order(OrderType::BUY, element.price, element.size),
                 };
 
+                if Instant::now().duration_since(earlier) > Duration::from_millis(100) {
+                    earlier = Instant::now();
+    
+                    bookarc.update_state(); 
+                    println!("updated state");
+                }
             }
         }
     });

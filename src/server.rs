@@ -32,11 +32,11 @@ async fn ws_route(
 ) -> Result<HttpResponse, Error> {
     println!("Req: {:?}", &req);
     ws::start(
-        WsConnection {
-            hb: Instant::now(),
-            tx: channel.get_ref().clone(),
-            book: book.get_ref().clone(),
-        },
+        WsConnection::new(
+            Instant::now(),
+            channel.get_ref().clone(),
+            book.get_ref().clone(),
+        ),
         &req,
         stream,
     )
@@ -51,7 +51,7 @@ pub async fn start_server(tx: Sender<Transaction>, book: Arc<RwLock<Book>>) -> s
     // Start api server
     HttpServer::new(move|| {
         let transactor = web::Data::new(tx.clone());
-        let dataReceive = web::Data::new(book.clone());
+        let data_receive = web::Data::new(book.clone());
 
 
         let cors = Cors::default()
@@ -62,7 +62,7 @@ pub async fn start_server(tx: Sender<Transaction>, book: Arc<RwLock<Book>>) -> s
         App::new()
             .wrap(cors)
             .app_data(transactor)
-            .app_data(dataReceive)
+            .app_data(data_receive)
             .service(create)
             .service(test)
             .service(ws_route)
