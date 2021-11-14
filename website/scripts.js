@@ -119,7 +119,7 @@ setInterval(function () {
 
     // Sells
     const sellOrders = sells.map((order) =>
-        <Order key={order.timestamp.toString()} value={order} />
+        <Order key={(order.timestamp + order.size).toString()} value={order} />
     );
     let toRender = <div id="sub-sell-orders">{sellOrders}</div>
 
@@ -131,7 +131,7 @@ setInterval(function () {
 
     // Buys
     const buyOrders = buys.map((order) =>
-        <Order key={order.timestamp.toString()} value={order} />
+        <Order key={(order.timestamp + order.size).toString()} value={order} />
     );
     toRender = <div id="buy-orders">{buyOrders}</div>
 
