@@ -55,17 +55,14 @@ impl Book {
                 if highest_sell.price <= highest_buy.price {
                     let remainder = highest_sell.size - highest_buy.size;
                     if remainder == 0 {
-                        println!("Matched {:?} against {:?}", highest_buy, highest_sell);
                         self.sell_book.pop();
                         self.buy_book.pop();
                     }
                     else if remainder > 0 {
-                        println!("Matched {:?} against {:?}", highest_buy, highest_sell);
                         self.sell_book.peek_mut().unwrap().size -= highest_buy.size;
                         self.buy_book.pop();
                     }
                     else {
-                        println!("Matched {:?} against {:?}", highest_buy, highest_sell);
                         self.buy_book.peek_mut().unwrap().size -= highest_sell.size;
                         self.sell_book.pop();
                     }

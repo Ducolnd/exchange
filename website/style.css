@@ -13,6 +13,7 @@
     height: 50%;
     /* border: 1px solid black; */
     position: relative;
+    overflow: hidden;
 }
 
 #sub-sell-orders {
@@ -21,7 +22,7 @@
     width: 100%;
 }
 
-#buy-orders {
+#outer-buy-orders {
     /* border: 1px solid black; */
     overflow: scroll;
     height: 50%;
@@ -52,7 +53,7 @@
     }
 }
 
-#sub-sell-orders::-webkit-scrollbar, #buy-orders::-webkit-scrollbar {
+#sub-sell-orders::-webkit-scrollbar, #outer-buy-orders::-webkit-scrollbar {
     display: none;
 }
 
