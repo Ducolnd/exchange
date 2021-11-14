@@ -50,7 +50,7 @@
 
             <div class="col-6">
                 <form onSubmit="return false;" id="transaction">
-                    <div class="form-group row no-gutters">
+                    <div id="order-details" class="form-group row no-gutters">
                         <div class="col">
                             <small class="form-text text-muted" for="price">Price</small>
                             <input class="form-control form-control-sm" type="number" id="price" value="100">
@@ -61,20 +61,25 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <div role="group" class="btn-group btn-group-lg">
+                    <div id="order-details" class="form-group">
+                        <div role="group" class="btn-group btn-group-lg btn-block">
                             <button id="select_sell" class="btn btn-danger">Sell</button>
                             <button id="select_buy" class="btn btn-outline-success">Buy</button>
                         </div>
                     </div>
             
             
-                    <button id="submit_form" class="btn btn-primary">Submit</button>
+                    <button id="submit_form" class="btn btn-primary btn-block">Submit</button>
                 </form>
             
-                <h3>Would you like to place orders using Websockets or HTTP?</h3>
-                <button style="color: blue" class="protocol btn btn-light" id="ws">Websockets</button>
-                <button class="protocol btn btn-light" id="http">HTTP</button>
+                
+                <div id="protocol-select">
+                    <h3 class="text-center">Would you like to place orders using Websockets or HTTP?</h3>
+                    <div class="button-group">
+                        <button style="color: blue" class="protocol btn btn-light" id="ws">Websockets</button>
+                        <button class="protocol btn btn-light" id="http">HTTP</button>
+                    </div>
+                </div>
             </div>
 
             <div class="col-3">

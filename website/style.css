@@ -60,3 +60,30 @@
     text-align: center;
     margin: 0;
 }
+
+.btn-group .btn {
+    border-radius: 0;
+    width: 50%;
+}
+
+/* Order place styling */
+#order-details {
+    width: 70%;
+    margin: 0 auto;
+}
+
+#protocol-select {
+    margin-top: 200px;
+}
+
+#protocol-select .button-group {
+    margin: 0 auto;
+}
+
+#submit_form {
+    margin-top: 50px;
+}
+
+#http {
+    float: right;
+}
