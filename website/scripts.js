@@ -209,5 +209,8 @@ function disconnect() {
         console.log('Disconnecting...');
         conn.close();
         conn = null;
+
+        sells = [];
+        buys = [];
     }
 }
