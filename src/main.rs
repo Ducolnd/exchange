@@ -7,7 +7,7 @@ use crossbeam_channel::unbounded;
 
 mod types;
 mod server;
-mod websocket;
+mod ws;
 
 use types::{Book, OrderType, Transaction};
 use server::start_server;

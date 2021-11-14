@@ -1,14 +1,12 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use std::sync::{Arc, RwLock};
-
-use crossbeam_channel::Sender;
-use serde_json::json;
 
 use actix::prelude::*;
 use actix_web_actors::ws;
 
-use crate::types::{Transaction, BuyOrder, SellOrder, Book};
+use crate::types::{Transaction, BuyOrder, SellOrder};
+use crate::ws::wsServer::Server;
+use crate::ws::types::{Connect, Disconnect};
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_UPDATE_INTERVAL: Duration = Duration::from_millis(500);
@@ -16,12 +14,9 @@ const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 
 pub struct WsConnection {
-    /// Client must send ping at least once per 10 seconds (CLIENT_TIMEOUT),
-    /// otherwise we drop connection.
-    pub hb: Instant,
-    pub tx: Sender<Transaction>,
-    pub book: Arc<RwLock<Book>>,
-    buffered_state: (Vec<BuyOrder>, Vec<SellOrder>),
+    hb: Instant,    
+    server: Addr<Server>,
+    id: usize,
 }
 
 impl Actor for WsConnection {
@@ -29,19 +24,20 @@ impl Actor for WsConnection {
 
     /// Method is called on actor start. We start the heartbeat process here.
     fn started(&mut self, ctx: &mut Self::Context) {
+        // Start heartbeat
         self.hb(ctx);
-        self.update_client(ctx);
 
-        if let Ok(read) = self.book.read() {
-            let item = json!({
-                "buy": {"add": read.buffered_state.0},
-                "sell": {"add": read.buffered_state.1},
-            });
+        self.server.do_send(Connect {
+            // Todo send data to server
+        }); // Todo do something with received id
 
-            ctx.text(serde_json::to_string(&item).unwrap());
+    }
 
-            self.buffered_state = read.buffered_state.clone();
-        }
+    fn stopping(&mut self, ctx: &mut Self::Context) -> Running {
+        self.server.send(Disconnect {
+
+        });
+        Running::Stop
     }
 }
 
@@ -54,12 +50,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConnection {
         // process websocket messages
         match msg {
             Ok(ws::Message::Text(text)) => {
-                // Parse json
-                let transaction: Transaction = serde_json::from_str(&text).unwrap();
 
-                // Send transaction to Book thread
-                self.tx.send(transaction).unwrap();
-                println!("WS: {:?}", text);
             },
             Ok(ws::Message::Ping(msg)) => {
                 self.hb = Instant::now();
@@ -68,7 +59,9 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConnection {
             Ok(ws::Message::Pong(_)) => {
                 self.hb = Instant::now();
             }
-            Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
+            Ok(ws::Message::Binary(_)) => {
+                println!("Unexpected binary");
+            },
             Ok(ws::Message::Close(reason)) => {
                 ctx.close(reason);
                 ctx.stop();
@@ -81,18 +74,16 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConnection {
 impl WsConnection {
     pub fn new(
         hb: Instant,
-        tx: Sender<Transaction>,
-        book: Arc<RwLock<Book>>,
+        server: Addr<Server>,
     ) -> Self {
         Self {
             hb,
-            tx,
-            book,
-            buffered_state: (vec![], vec![]),
+            server,
+            id: 0,
         }
     }
 
-    /// helper method that sends ping to client every second.
+    /// Helper method that sends ping to client every second.
     fn hb(&self, ctx: &mut <Self as Actor>::Context) {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
             // check client heartbeats
@@ -103,7 +94,7 @@ impl WsConnection {
                 // stop actor
                 ctx.stop();
 
-                // don't try to send a ping
+                // don't try to another ping
                 return;
             }
 
@@ -111,25 +102,25 @@ impl WsConnection {
         });
     }
 
-    fn update_client(&self, ctx: &mut <Self as Actor>::Context) {       
-        ctx.run_interval(CLIENT_UPDATE_INTERVAL, |act, ctx| {
+    // fn update_client(&self, ctx: &mut <Self as Actor>::Context) {       
+    //     ctx.run_interval(CLIENT_UPDATE_INTERVAL, |act, ctx| {
             
-            if let Ok(read) = act.book.read() {
-                let reset = WsConnection::compare_old_new(&act.buffered_state, &read.buffered_state);
+    //         if let Ok(read) = act.book.read() {
+    //             let reset = WsConnection::compare_old_new(&act.buffered_state, &read.buffered_state);
 
-                if !(reset.0.is_empty() && reset.1.is_empty()) {
-                    let item = json!({
-                        "buy": reset.0,
-                        "sell": reset.1,
-                    });
+    //             if !(reset.0.is_empty() && reset.1.is_empty()) {
+    //                 let item = json!({
+    //                     "buy": reset.0,
+    //                     "sell": reset.1,
+    //                 });
     
-                    ctx.text(serde_json::to_string(&item).unwrap());
+    //                 ctx.text(serde_json::to_string(&item).unwrap());
 
-                    act.buffered_state = read.buffered_state.clone(); // Update
-                }
-            }
-        });
-    }
+    //                 act.buffered_state = read.buffered_state.clone(); // Update
+    //             }
+    //         }
+    //     });
+    // }
 
     /// What has changed?
     fn compare_old_new(
