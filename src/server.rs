@@ -9,8 +9,8 @@ use actix_web_actors::ws;
 use crossbeam_channel::Sender;
 
 use crate::types::{Transaction, Book};
-use crate::ws::session::{WsConnection};
-use crate::ws::wsServer::Server;
+use crate::ws::session::{Session};
+use crate::ws::ws_server::Server;
 
 
 #[post("/")]
@@ -36,9 +36,9 @@ async fn ws_route(
     println!("Req: {:?}", &req);
     
     ws::start(
-        WsConnection::new(
+        Session::new(
             Instant::now(),
-            server_ref.get_ref().clone(),
+                server_ref.get_ref().clone(),
         ),
         &req,
         stream,
@@ -51,7 +51,7 @@ pub async fn start_server(tx: Sender<Transaction>, book: Arc<RwLock<Book>>) -> s
     std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
     env_logger::init();
 
-    let server = Server::new(book).start();
+    let server = Server::new(book, tx.clone()).start();
 
     // Start api server
     HttpServer::new(move|| {

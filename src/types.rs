@@ -2,7 +2,6 @@ use std::{cmp::Ord, collections::BinaryHeap, time::UNIX_EPOCH};
 use core::cmp::{Ordering};
 use std::time::SystemTime;
 
-use actix::Message;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone)]
@@ -82,7 +81,7 @@ pub enum OrderType {
 
 // Sell Order
 
-#[derive(Debug, Clone, Serialize, PartialEq, )]
+#[derive(Debug, Clone, Serialize, PartialEq, Deserialize)]
 pub struct SellOrder {
     pub size: i64,
     pub price: u64,
@@ -112,7 +111,7 @@ impl PartialOrd for SellOrder {
 
 // Buy Order
 
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BuyOrder {
     pub size: i64,
     pub price: u64,
@@ -141,7 +140,7 @@ impl PartialOrd for BuyOrder {
 }
 
 // The raw json transaction
-#[derive(Deserialize, Serialize, Debug, actix::prelude::Message)]
+#[derive(Deserialize, Serialize, Debug, actix::prelude::Message, Clone, Copy)]
 #[rtype(result ="()")]
 pub struct Transaction {
     pub size: i64,

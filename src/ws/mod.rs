@@ -1,3 +1,3 @@
 pub mod session;
 pub mod types;
-pub mod wsServer;
+pub mod ws_server;
