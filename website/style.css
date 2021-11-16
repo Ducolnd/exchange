@@ -88,3 +88,8 @@
 #http {
     float: right;
 }
+
+/* Transaction-list styling */
+.date {
+    font-size: 15px;
+}

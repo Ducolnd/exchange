@@ -82,7 +82,7 @@ function connect() {
 
         switch (data.type) {
             case "Transaction":
-                // Todo handle incoming transaction and update ui
+                RenderTransaction(data);
                 break;
 
             case "OrderBook":
@@ -103,6 +103,19 @@ function connect() {
         console.warn("Disconnected from server")
         conn = null;
     }
+}
+
+function RenderTransaction(transaction) {
+    let el = $("#list-transactions");
+    let color = transaction.sell ? "red" : "#47d600"
+
+    let html = `<div class="row">
+    <div class="col"><p>${transaction.size}</p></div>
+    <div class="col"><p style="color: ${color}">${transaction.price}</p></div>
+    <div class="col"><p class="date">${(new Date()).toLocaleTimeString().slice(0, -3)}</p></div>
+
+    </div>`
+    el.prepend(html);
 }
 
 function HandleOrderBookUpdate(data) {
@@ -141,7 +154,7 @@ function UpdateUI() {
 
     // Sells
     const sellOrders = sells.map((order) =>
-        <Order key={(order.timestamp + order.size).toString()} value={order} />
+        <Order key={(order.timestamp + order.size + order.price).toString()} value={order} />
     );
     let toRender = <div id="sub-sell-orders">{sellOrders}</div>
 
