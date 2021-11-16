@@ -16,7 +16,7 @@ $(document).ready(function () {
     $("#submit_form").click(function () {
         let data = {
             size: parseInt(parseFloat($("#size").val())),
-            price: parseInt(parseFloat($("#price").val())),
+            price: parseInt(parseFloat($("#price").val())) * 10e9,
             sell: action === "sell" ? true : false,
             type: "Transaction",
         }
@@ -111,7 +111,7 @@ function RenderTransaction(transaction) {
 
     let html = `<div class="row">
     <div class="col"><p>${transaction.size}</p></div>
-    <div class="col"><p style="color: ${color}">${transaction.price}</p></div>
+    <div class="col"><p style="color: ${color}">${transaction.price / 10e9}</p></div>
     <div class="col"><p class="date">${(new Date()).toLocaleTimeString().slice(0, -3)}</p></div>
 
     </div>`
@@ -142,7 +142,7 @@ class Order extends React.Component {
         return (
             <div className="row">
                 <div className="col"><p>{this.state.order.size}</p></div>
-                <div className="col price-col"><p>{this.state.order.price}</p></div>
+                <div className="col price-col"><p>{this.state.order.price / 10e9}</p></div>
             </div>
         );
     }
@@ -154,7 +154,7 @@ function UpdateUI() {
 
     // Sells
     const sellOrders = sells.map((order) =>
-        <Order key={(order.timestamp + order.size + order.price).toString()} value={order} />
+        <Order key={(order.timestamp / 10e6 + order.size + order.price / 10e9).toString()} value={order} />
     );
     let toRender = <div id="sub-sell-orders">{sellOrders}</div>
 
@@ -166,7 +166,7 @@ function UpdateUI() {
 
     // Buys
     const buyOrders = buys.map((order) =>
-        <Order key={(order.timestamp + order.size).toString()} value={order} />
+        <Order key={(order.timestamp / 10e6 + order.size + order.price / 10e9).toString()} value={order} />
     );
     toRender = <div id="buy-orders">{buyOrders}</div>
 

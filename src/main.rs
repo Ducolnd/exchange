@@ -46,7 +46,7 @@ fn main(){
                     let sell_bool = rand::random();
                     tx.send(Transaction {
                         sell: sell_bool,
-                        price: if sell_bool {rng.gen_range(95..110)} else {rng.gen_range(90..105)},
+                        price: (if sell_bool {rng.gen_range(95..110)} else {rng.gen_range(90..105)}) * 10e9 as u64,
                         size: rng.gen_range(1..30)
                     }).unwrap();
 
