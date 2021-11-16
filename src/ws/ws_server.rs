@@ -39,12 +39,13 @@ impl Server {
                 let clone = book.buffered_state.clone();
                 let compare = Server::compare_old_new(&act.buffered_state, &clone);
 
-                act.send_all_sessions(ClientMessages::OrderBookUpdate {
-                    buy: compare.0,
-                    sell: compare.1,
-                });
-
-                act.buffered_state = book.buffered_state.clone();
+                if compare.0.len() > 0 || compare.1.len() > 0 {
+                    act.send_all_sessions(ClientMessages::OrderBookUpdate {
+                        buy: compare.0,
+                        sell: compare.1,
+                    });
+                    act.buffered_state = book.buffered_state.clone();
+                }
             }
         });
     }
@@ -153,14 +154,13 @@ impl Handler<Transaction> for Server {
     type Result = ();
 
     fn handle(&mut self, msg: Transaction, _: &mut Context<Self>) {
+        // Send transaction to Order Book
         if let Err(res) = self.book_channel.try_send(msg) {
             println!("Something is wrong with book_channel: {:?}", res);
             return;
         };
 
         // Update all clients on new transaction
-        for addr in self.sessions.values() {
-            addr.do_send(ClientMessages::Transaction(msg)).unwrap();
-        }
+        self.send_all_sessions(ClientMessages::Transaction(msg));
     }
 }

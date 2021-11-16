@@ -18,6 +18,7 @@ $(document).ready(function () {
             size: parseInt(parseFloat($("#size").val())),
             price: parseInt(parseFloat($("#price").val())),
             sell: action === "sell" ? true : false,
+            type: "Transaction",
         }
         data = JSON.stringify(data);
 
@@ -79,20 +80,41 @@ function connect() {
     conn.onmessage = function (e) {
         let data = JSON.parse(e.data);
 
-        let newBuys = data["buy"];
-        let newSells = data["sell"];
+        switch (data.type) {
+            case "Transaction":
+                // Todo handle incoming transaction and update ui
+                break;
 
-        console.log("newBuys", newBuys, "newSells", newSells);
+            case "OrderBook":
+                HandleOrderBookUpdate(data);
+                UpdateUI();
+                break;
 
-        updateBook(newSells, newBuys);
+            case "OrderBookUpdate":
+                HandleOrderBookUpdate(data);
+                UpdateUI();
+                break;
 
-        prevBuys = buys;
-        prevSells = sells;
+            default:
+                console.log("Error occured, false type")
+        }
     }
     conn.onclose = function () {
         console.warn("Disconnected from server")
         conn = null;
     }
+}
+
+function HandleOrderBookUpdate(data) {
+    let newBuys = data["buy"];
+    let newSells = data["sell"];
+
+    console.log("newBuys", newBuys, "newSells", newSells);
+
+    updateBook(newSells, newBuys);
+
+    prevBuys = buys;
+    prevSells = sells;
 }
 
 class Order extends React.Component {
@@ -113,7 +135,7 @@ class Order extends React.Component {
     }
 }
 
-setInterval(function () {
+function UpdateUI() {
     sells.sort(compareSellOrder);
     buys.sort(compareSellOrder);
 
@@ -139,8 +161,7 @@ setInterval(function () {
         toRender,
         document.getElementById('outer-buy-orders')
     );
-
-}, 100);
+}
 
 function updateBook(newSells, newBuys) {
     // Sells
@@ -171,7 +192,7 @@ function updateBook(newSells, newBuys) {
     if (Object.keys(newBuys).length > 0) {
         if (Object.keys(buys).length > 0) {
             if ("delete" in newBuys) {
-                
+
                 for (let i = 0; i < newBuys["delete"].length; i++) {
                     for (let x = 0; x < buys.length; x++) {
                         if (newBuys["delete"][i].timestamp === buys[x].timestamp) {
