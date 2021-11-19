@@ -88,7 +88,6 @@ function AggregateTransactions() {
 
 /// Updates the Order Book data, does not change UI
 function updateBook() {
-    console.log("updateBook: ", newSells, newBuys);
     // Sells
     if (Object.keys(newSells).length > 0) {
         if (Object.keys(sells).length > 0) {

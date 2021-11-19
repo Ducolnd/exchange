@@ -7,8 +7,12 @@ function connect() {
         return
     }
 
-    conn = new WebSocket(WEBSOCKET_SERVER_URL);
     console.log("Connecting to websocket...");
+    conn = new WebSocket(WEBSOCKET_SERVER_URL);
+
+    conn.onerror = function (e) {
+        console.error("WebSocket error observed:", e);
+    }
 
     conn.onopen = function () {
         console.log("Connected");
@@ -23,7 +27,6 @@ function connect() {
                 break;
 
             case "OrderBook":
-                console.log("Orderbook first time connection", data);
                 HandleInitialOrderBook(data);
                 AggregateTransactions();
                 UpdateUI();
@@ -40,7 +43,7 @@ function connect() {
         }
     }
     conn.onclose = function () {
-        console.warn("Disconnected from server")
+        console.log("Disconnected from server")
         conn = null;
     }
 }
