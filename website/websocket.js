@@ -25,9 +25,10 @@ function connect() {
                 HandleOrderBookUpdate(data);
                 UpdateUI();
                 break;
-
+                
             case "OrderBookUpdate":
                 HandleOrderBookUpdate(data);
+                AggregateTransactions();
                 UpdateUI();
                 break;
 

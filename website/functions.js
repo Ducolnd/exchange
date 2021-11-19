@@ -1,15 +1,21 @@
-// These variables are used to keep track of the Order Book, later used for rending
+// These variables are used to keep track of the Order Book, later used for rendering
 let sells = [];
 let buys = [];
+
+let newBuys = {}
+let newSells = {};
+
+let aggregatedSells = [];
+let aggregatedBuys = [];
 
 
 // Renders sells and buys to the client
 function UpdateUI() {
-    sells.sort(compareSellOrder);
-    buys.sort(compareSellOrder);
+    aggregatedSells.sort(compareSellOrder);
+    aggregatedBuys.sort(compareSellOrder);
 
     // Sells
-    const sellOrders = sells.map((order) =>
+    const sellOrders = aggregatedSells.map((order) =>
         <Order key={(order.timestamp / 10e9 + order.size + order.price / 10e9).toString()} value={order} />
     );
     let toRender = <div id="sub-sell-orders">{sellOrders}</div>
@@ -21,7 +27,7 @@ function UpdateUI() {
 
 
     // Buys
-    const buyOrders = buys.map((order) =>
+    const buyOrders = aggregatedBuys.map((order) =>
         <Order key={(order.timestamp / 10e9 + order.size + order.price / 10e9).toString()} value={order} />
     );
     toRender = <div id="buy-orders">{buyOrders}</div>
@@ -47,8 +53,39 @@ function RenderTransaction(transaction) {
     el.prepend(html);
 }
 
+function AggregateTransactions() {
+
+    aggregatedBuys = [];
+    aggregatedSells = [];
+    
+    // Sells
+    let index = -1;
+    let prices = [];
+    for (let transaction of sells.sort(compareSellOrder).slice()) {
+        if (prices.includes(transaction.price)) {
+            aggregatedSells[index].size += transaction.size;
+        } else {
+            index++;
+            aggregatedSells[index] = {price: transaction.price, size: transaction.size, timestamp: transaction.timestamp};
+            prices.push(transaction.price);
+        }
+    }
+
+    index = -1;
+    prices = [];
+    for (let transaction of buys.sort(compareSellOrder).slice()) {
+        if (prices.includes(transaction.price)) {
+            aggregatedBuys[index].size += transaction.size;
+        } else {
+            index++;
+            aggregatedBuys[index] = {price: transaction.price, size: transaction.size, timestamp: transaction.timestamp};
+            prices.push(transaction.price);
+        }
+    }
+}
+
 /// Updates the Order Book data, does not change UI
-function updateBook(newSells, newBuys) {
+function updateBook() {
     // Sells
     if (Object.keys(newSells).length > 0) {
         if (Object.keys(sells).length > 0) {
@@ -101,10 +138,10 @@ function updateBook(newSells, newBuys) {
 
 // 
 function HandleOrderBookUpdate(data) {
-    let newBuys = data["buy"];
-    let newSells = data["sell"];
+    newBuys = data["buy"];
+    newSells = data["sell"];
 
-    updateBook(newSells, newBuys);
+    updateBook();
 }
 
 

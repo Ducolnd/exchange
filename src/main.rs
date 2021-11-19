@@ -33,7 +33,7 @@ fn main(){
     });
 
     // Thread which makes test orders
-    for _ in 0..4 {
+    for _ in 0..0 {
         let tx = tx_transaction.clone();
         thread::spawn(move || {
             let mut rng = rand::thread_rng();
