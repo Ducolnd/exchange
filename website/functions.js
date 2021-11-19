@@ -36,6 +36,8 @@ function UpdateUI() {
         toRender,
         document.getElementById('outer-buy-orders')
     );
+
+    $("#price-spread").html((sells[0].price - buys[0].price) / 10e9);
 }
 
 
