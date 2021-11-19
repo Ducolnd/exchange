@@ -93,3 +93,12 @@
 .date {
     font-size: 15px;
 }
+
+#transactions {
+    max-height: 700px;
+    overflow: scroll;
+}
+
+#transactions::-webkit-scrollbar {
+    display: none;
+}
