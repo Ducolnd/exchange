@@ -12,6 +12,7 @@ function connect() {
 
     conn.onopen = function () {
         console.log("Connected");
+        conn.send(JSON.stringify({type: "RequestEntireBook"}))
     }
     conn.onmessage = function (e) {
         let data = JSON.parse(e.data);
@@ -22,7 +23,9 @@ function connect() {
                 break;
 
             case "OrderBook":
-                HandleOrderBookUpdate(data);
+                console.log("Orderbook first time connection", data);
+                HandleInitialOrderBook(data);
+                AggregateTransactions();
                 UpdateUI();
                 break;
                 

@@ -2,8 +2,8 @@
 let sells = [];
 let buys = [];
 
-let newBuys = {}
-let newSells = {};
+let newBuys = []
+let newSells = [];
 
 let aggregatedSells = [];
 let aggregatedBuys = [];
@@ -86,6 +86,7 @@ function AggregateTransactions() {
 
 /// Updates the Order Book data, does not change UI
 function updateBook() {
+    console.log("updateBook: ", newSells, newBuys);
     // Sells
     if (Object.keys(newSells).length > 0) {
         if (Object.keys(sells).length > 0) {
@@ -136,12 +137,16 @@ function updateBook() {
     }
 }
 
-// 
 function HandleOrderBookUpdate(data) {
     newBuys = data["buy"];
     newSells = data["sell"];
 
     updateBook();
+}
+
+function HandleInitialOrderBook(data) {
+    sells = data["sell"].sort(compareSellOrder);
+    buys = data["buy"].sort(compareSellOrder);
 }
 
 
