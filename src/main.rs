@@ -1,6 +1,7 @@
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use std::{thread, time::Instant};
+use actix::Actor;
 use rand::Rng;
 
 use crossbeam_channel::unbounded;
@@ -10,6 +11,7 @@ mod server;
 mod ws;
 
 use types::{Book, OrderType, Transaction};
+use ws::ws_server::Server;
 use server::start_server;
 
 fn main(){
@@ -24,12 +26,15 @@ fn main(){
 
     // This thread will run the server
     let tx_server = tx_transaction.clone();
+    let server = Server::new(write_lock, tx_server).start();
+
     let handle = thread::spawn(move || {
         // Start the server, give it its own send channel for communicating transactions
-        match start_server(tx_server, write_lock) {
+        match start_server(server.clone()) {
             Err(e) => println!("An error occured: {:?}", e),
             _ => (),
         };
+        println!("stopped server");
     });
 
     // Thread which makes test orders

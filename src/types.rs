@@ -4,7 +4,7 @@ use std::time::SystemTime;
 
 use serde::{Serialize, Deserialize};
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Book {
     pub sell_book: BinaryHeap<SellOrder>,
     pub buy_book: BinaryHeap<BuyOrder>,

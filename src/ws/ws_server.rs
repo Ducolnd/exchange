@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
+use std::fs::File;
 
 use actix::prelude::*;
 use crossbeam_channel::Sender;
@@ -107,6 +108,14 @@ impl Actor for Server {
 
     fn started(&mut self, ctx: &mut Self::Context) {
         self.update_clients(ctx);
+    }
+
+    fn stopped(&mut self, _: &mut Self::Context) {
+        // Write current state to file
+        println!("here!!!");
+        if let Ok(data) = self.book.read() {
+            serde_json::to_writer(&File::create("data.json").unwrap(), &data.clone()).unwrap();
+        }
     }
 }
 
