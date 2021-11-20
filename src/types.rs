@@ -147,3 +147,14 @@ pub struct Transaction {
     pub price: u64,
     pub sell: bool,
 }
+
+pub struct LimitOrder {
+    size: f64,
+    price: f64,
+    side: String,
+}
+
+pub struct MarketOrder {
+    size: f64,
+    side: String, // Bid or ask
+}

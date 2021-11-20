@@ -75,6 +75,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                         println!("Received transaction");
                         self.server.do_send(transaction);
                     },
+                    _ => {panic!()}
                 }
             },
             Ok(ws::Message::Ping(msg)) => {
