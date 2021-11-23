@@ -5,11 +5,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::{Transaction, BuyOrder, SellOrder};
 
-// Actor types
+use super::ws_channel_messages::ChannelMessage;
+
+// Messages for communicating between Actors
 #[derive(Message)]
 #[rtype(usize)]
 pub struct Connect {
-    pub addr: Recipient<ClientMessages>,
+    pub addr: Recipient<ChannelMessage>,
 }
 
 #[derive(Message)]
@@ -20,40 +22,30 @@ pub struct Disconnect {
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct RequestEntireBook {
+pub struct UnsubscribeNotify {
     pub id: usize,
+    pub subscription: Subscribe,
 }
 
-/// Messages server can send to client 
-#[derive(Serialize, Deserialize, Message, Debug, Clone)]
-#[serde(tag="type")]
+#[derive(Message)]
 #[rtype(result = "()")]
-pub enum ClientMessages {
-    Transaction(Transaction),
-    /// Entire Order Book
-    OrderBook {
-        buy: Vec<BuyOrder>,
-        sell: Vec<SellOrder>,
-    },
-    /// Difference between old and new
-    OrderBookUpdate { 
-        buy: HashMap<String, Vec<BuyOrder>>,
-        sell: HashMap<String, Vec<SellOrder>>,
-    },
-    /// An error with error message
-    Error {message: String},
+pub struct SubscribeNotify {
+    pub id: usize,
+    pub subscription: Subscribe,
 }
+///////////////////////////////
 
 /// Messages client can send to the server
 #[derive(Serialize, Deserialize, Message, Debug)]
 #[serde(tag="type")]
 #[rtype(result = "()")]
 pub enum ServerMessage {
-    /// Client feels the need to re-receive data, maybe an error occured on client side
-    RequestEntireBook,
     /// Client sends new transaction
     Transaction(Transaction),
+    /// Client subscribes
     Subscribe(Subscribe),
+    /// Client unsubcribe
+    UnSubscribe(UnSubscribe),
 }
 
 /// A subscribe message must be send withing a few seconds of connecting to the server.
@@ -62,6 +54,12 @@ pub enum ServerMessage {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag="channel-type")]
 pub struct Subscribe {
+    channel: Channels,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag="channel-type")]
+pub struct UnSubscribe {
     channel: Channels,
 }
 

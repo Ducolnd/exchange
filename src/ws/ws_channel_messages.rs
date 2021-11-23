@@ -1,10 +1,15 @@
+use actix::Message;
 use serde::{Deserialize, Serialize};
 
 /// Server updates client on subscribed channels.
 /// This is a server --> client message.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Message)]
 #[serde(tag="type")]
+#[rtype(result = "()")]
 pub enum ChannelMessage {
+    /// An error occured
+    Error {message: String},
+    
     // Both level 1 updates
     Heartbeat(Heartbeat),
     Ticker(Ticker),

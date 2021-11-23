@@ -4,9 +4,10 @@ use actix::prelude::*;
 use actix_web_actors::ws;
 
 use crate::ws::ws_server::Server;
-use crate::ws::types::{Connect, Disconnect, ServerMessage};
+use crate::ws::types::{Connect, ServerMessage};
 
-use super::types::{ClientMessages, RequestEntireBook};
+use super::types::{Disconnect, SubscribeNotify};
+use super::ws_channel_messages::ChannelMessage;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
@@ -47,10 +48,11 @@ impl Actor for Session {
     }
 }
 
-impl Handler<ClientMessages> for Session {
+// We send messages from server to the client
+impl Handler<ChannelMessage> for Session {
     type Result = ();
 
-    fn handle(&mut self, msg: ClientMessages, ctx: &mut Self::Context) {
+    fn handle(&mut self, msg: ChannelMessage, ctx: &mut Self::Context) {
         ctx.text(serde_json::to_string(&msg).unwrap());
     }
 }
@@ -68,8 +70,11 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
 
                 // All the types of messages a client can send.
                 match data {
-                    ServerMessage::RequestEntireBook => {
-                        self.server.do_send(RequestEntireBook {id: self.id});
+                    ServerMessage::Subscribe(subscription) => {
+                        self.server.do_send(SubscribeNotify {
+                            id: self.id,
+                            subscription,
+                        });
                     },
                     ServerMessage::Transaction(transaction) => {
                         println!("Received transaction");

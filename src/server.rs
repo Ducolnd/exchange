@@ -46,16 +46,15 @@ async fn ws_route(
 }
 
 #[actix_web::main]
-pub async fn start_server(tx: Sender<Transaction>, book: Arc<RwLock<Book>>) -> std::io::Result<()> {
+pub async fn start_server() -> std::io::Result<()> {
 
     std::env::set_var("RUST_LOG", "actix_server=info,actix_web=info");
     env_logger::init();
 
-    let server = Server::new(book, tx.clone()).start();
+    let server = Server::new().start();
 
     // Start api server
     HttpServer::new(move|| {
-        let transactor = web::Data::new(tx.clone());
         let server_ref = web::Data::new(server.clone());
 
 
@@ -66,7 +65,6 @@ pub async fn start_server(tx: Sender<Transaction>, book: Arc<RwLock<Book>>) -> s
 
         App::new()
             .wrap(cors)
-            .app_data(transactor)
             .app_data(server_ref)
             .service(create)
             .service(test)
