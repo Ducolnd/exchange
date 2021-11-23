@@ -45,7 +45,7 @@ pub enum ServerMessage {
     /// Client subscribes
     Subscribe(Subscribe),
     /// Client unsubcribe
-    UnSubscribe(UnSubscribe),
+    UnSubscribe(Subscribe),
 }
 
 /// A subscribe message must be send withing a few seconds of connecting to the server.
@@ -54,7 +54,7 @@ pub enum ServerMessage {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag="channel-type")]
 pub struct Subscribe {
-    channel: Channels,
+    pub channel: Channels,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -65,20 +65,20 @@ pub struct UnSubscribe {
 
 /// A client can subscribe to a 'channel'.
 /// This is a client --> server message.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash)]
 #[serde(tag="channel-type")]
 pub enum Channels {
     /// The Hearbeat channel provides most recent ticker data (bid and ask price and size)
     /// on a predetermined interval (1s)
-    Heartbeat(Products),
+    Heartbeat,
     /// The ticker channel provides real-time price updates every time a match happens. It will 
     /// provide the client with the latest 
     /// It batches updates in case of cascading matches, greatly reducing bandwidth requirements.
-    Ticker(Products),
+    Ticker,
     /// Keep a snapshot of the entire order book.
-    Snapshot(Products),
+    Snapshot,
     /// Real-time updates on all orders and trades
-    Full(Products),
+    Full,
 }
 
 /// To what products a client wants to subscribe. Right now this is unimplemented and 

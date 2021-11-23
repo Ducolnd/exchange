@@ -6,7 +6,7 @@ use actix_web_actors::ws;
 use crate::ws::ws_server::Server;
 use crate::ws::types::{Connect, ServerMessage};
 
-use super::types::{Disconnect, SubscribeNotify};
+use super::types::{Disconnect, SubscribeNotify, UnsubscribeNotify};
 use super::ws_channel_messages::ChannelMessage;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -75,6 +75,12 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                             id: self.id,
                             subscription,
                         });
+                    },
+                    ServerMessage::UnSubscribe(subscription) => {
+                        self.server.do_send(UnsubscribeNotify {
+                            id: self.id,
+                            subscription: subscription,
+                        })
                     },
                     ServerMessage::Transaction(transaction) => {
                         println!("Received transaction");

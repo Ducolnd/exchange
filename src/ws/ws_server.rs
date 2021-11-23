@@ -15,20 +15,13 @@ use super::ws_channel_messages::ChannelMessage;
 const CLIENT_UPDATE_INTERVAL: Duration = Duration::from_millis(500);
 
 
-enum ChannelSelector {
-    Hearbeat,
-    Ticker,
-    Snapshot,
-    Full,
-}
-
 /// Server manages updating clients. Actix Actor...
 pub struct Server {
     book: Book,
     rng: ThreadRng,
 
     sessions: HashMap<usize, Recipient<ChannelMessage>>,
-    subscriptions: HashMap<ChannelSelector, HashSet<usize>>,
+    subscriptions: HashMap<Channels, HashSet<usize>>,
 }
 
 impl Server {
@@ -77,7 +70,18 @@ impl Handler<SubscribeNotify> for Server {
     type Result = ();
 
     fn handle(&mut self, msg: SubscribeNotify, ctx: &mut Self::Context) -> Self::Result {
-        
+        let key = msg.subscription.channel;
+
+        if self.subscriptions.contains_key(&key) {
+            self.subscriptions.get_mut(&key).unwrap().insert(msg.id);
+        } 
+        else {
+            let mut set = HashSet::new();
+            set.insert(msg.id);
+            self.subscriptions.insert(key, set);
+        }
+
+        println!("new subscription: {:?}", &self.subscriptions);
     }
 }
 
@@ -85,7 +89,7 @@ impl Handler<UnsubscribeNotify> for Server {
     type Result = ();
 
     fn handle(&mut self, msg: UnsubscribeNotify, _: &mut Context<Self>) {
-        
+        self.subscriptions.get_mut(&msg.subscription.channel).unwrap().remove(&msg.id);
     }
 }
 
