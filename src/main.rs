@@ -1,15 +1,9 @@
-use std::sync::{Arc, RwLock};
-use std::time::Duration;
-use std::{thread, time::Instant};
-use rand::Rng;
-
-use crossbeam_channel::unbounded;
+use std::thread;
 
 mod types;
 mod server;
 mod ws;
 
-use types::{Book, OrderType, Transaction};
 use server::start_server;
 
 fn main(){

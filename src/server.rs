@@ -1,5 +1,4 @@
 use std::time::Instant;
-use std::sync::{Arc, RwLock};
 
 use actix::Actor;
 use actix_web::{App, Error, HttpRequest, HttpResponse, HttpServer, Responder, get, post, web};
@@ -8,7 +7,7 @@ use actix::prelude::Addr;
 use actix_web_actors::ws;
 use crossbeam_channel::Sender;
 
-use crate::types::{Transaction, Book};
+use crate::types::Transaction;
 use crate::ws::session::{Session};
 use crate::ws::ws_server::Server;
 
